@@ -1,44 +1,58 @@
+import { Router } from 'express';
+import productModel from '../models/product.model.js';
 
-import { Router } from "express";
-import productModel from "../models/product.model.js"
+const router = Router();
 
-const router = Router()
-
-router.get('/api/products', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
-        const productos = await productModel.find();
-        res.render("home", {productos});
+        const products = await productModel.find().lean();
+        res.render('products', { products });
     } catch (error) {
-        console.log(error);
+        console.error('Error al obtener los productos:', error);
+        res.status(500).render('error', { message: 'Error al cargar los productos' });
     }
-}); 
+});
 
 router.post('/', async (req, res) => {
-    // let {nombre, apellido, email} = req.body
-    // if (!nombre || !apellido || !email) {
-    //     res.send({status: "error", error: "faltan parametros"})
-    // }
-    // let result = await userModel.create({nombre, apellido,email})
-    // res.send({result: "success", payload : result})
-}); 
+    const { title, description, price, thumbnail, code, stock, status } = req.body;
 
- router.put('/:uid', async (req, res) => {
-//     let {uid} = req.params
-//      let userToReplace = req.body
+    try {
+        const convertedStatus = status === 'on';
 
-//     if (!userToReplace.nombre || !userToReplace.apellido || !userToReplace.email) {
-//         res.send({result: "error", error: "faltan parametros"})
-//     }
-//    let resultado = await userModel.updateOne({_id: uid}, userToReplace)
+        const newProduct = new productModel({ title, description, price, thumbnail, code, stock, status: convertedStatus });
+        await newProduct.save();
+        res.redirect('/api/products');
+    } catch (error) {
+        console.error('Error al crear el producto:', error);
+        res.status(500).send('Error al crear el producto: ' + error.message);
+    }
+});
 
-//    res.send({result: "success", playload: resultado})
- }); 
+router.put('/:pid', async (req, res) => {
+    const { pid } = req.params;
+    const { title, description, price, thumbnail, code, stock, status } = req.body;
 
- router.delete('/:uid', async (req, res) => {
-    // let {uid} = req.params
-    // let result = await userModel.deleteOne({_id: uid})
-    // res.send({result: "success", playload: result})
-}); 
+    try {
+        const convertedStatus = status === 'on';
 
+        await productModel.findByIdAndUpdate(pid, { title, description, price, thumbnail, code, stock, status: convertedStatus });
+        res.redirect('/api/products');
+    } catch (error) {
+        console.error('Error al editar el producto:', error);
+        res.status(500).send('Error al editar el producto: ' + error.message);
+    }
+});
+
+router.delete('/:pid', async (req, res) => {
+    const { pid } = req.params;
+
+    try {
+        await productModel.findByIdAndDelete(pid);
+        res.redirect('/api/products');
+    } catch (error) {
+        console.error('Error al eliminar el producto:', error);
+        res.status(500).send('Error al eliminar el producto: ' + error.message);
+    }
+});
 
 export default router;

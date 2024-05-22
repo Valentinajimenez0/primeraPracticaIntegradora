@@ -1,44 +1,53 @@
-
 import { Router } from "express";
-import messageModel from "../models/message.model.js"
+import messageModel from "../models/message.model.js";
+import userModel from "../models/user.model.js";
 
-const router = Router()
+const router = Router();
 
-router.get('/mensajes', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
-        const mensajes = await messageModel.find()
-        res.render('chat', { mensajes })    }
-    catch (error) {
-        console.error(error)
+        const messages = await messageModel.find().lean();
+        res.render('messages', {messages: messages});
+    } catch (error) {
+        console.error('Error al cargar los mensajes:', error);
+        res.status(500).render('error', { message: 'Error al cargar' });
     }
 });
 
 router.post('/', async (req, res) => {
-    // let {nombre, apellido, email} = req.body
-    // if (!nombre || !apellido || !email) {
-    //     res.send({status: "error", error: "faltan parametros"})
-    // }
-    // let result = await userModel.create({nombre, apellido,email})
-    // res.send({result: "success", payload : result})
+    const { user_name, email, message } = req.body;
+
+    if (!user_name || !email || !message) {
+        return res.status(400).send('Faltan parámetros');
+    }
+
+    try {
+        let user = await userModel.findOne({ email });
+        if (!user) {
+            user = new userModel({ user_name, email });
+            await user.save();
+        }
+
+        const newMessage = new messageModel({ user: email, message });
+        await newMessage.save();
+
+        res.redirect('/api/messages');
+    } catch (error) {
+        console.error('Error al crear el mensaje:', error);
+        res.status(500).send('Error al crear el mensaje');
+    }
 });
 
-router.put('/:uid', async (req, res) => {
-    //     let {uid} = req.params
-    //      let userToReplace = req.body
+router.get('/:chid', async (req, res) => {
+    try {
+        const { chid } = req.params;
+        await messageModel.findByIdAndDelete(chid);
 
-    //     if (!userToReplace.nombre || !userToReplace.apellido || !userToReplace.email) {
-    //         res.send({result: "error", error: "faltan parametros"})
-    //     }
-    //    let resultado = await userModel.updateOne({_id: uid}, userToReplace)
-
-    //    res.send({result: "success", playload: resultado})
+        res.redirect('/api/messages');
+    } catch (error) {
+        console.error('Error al eliminar el mensaje:', error);
+        res.status(500).render('error', { message: 'Error al eliminar el mensaje.' });
+    }
 });
-
-router.delete('/:uid', async (req, res) => {
-    // let {uid} = req.params
-    // let result = await userModel.deleteOne({_id: uid})
-    // res.send({result: "success", playload: result})
-});
-
 
 export default router;

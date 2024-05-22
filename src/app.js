@@ -14,7 +14,7 @@ const PORT = 8080
 app.use(express.json());
 app.use(express.urlencoded({ extended : true }));
 
- mongoose.connect("mongodb+srv://valentinaJimenez0:sherina20181@clustervj.7lk17ev.mongodb.net/ecommerce?retryWrites=true&w=majority&appName=ClusterVJ")
+ mongoose.connect("mongodb+srv://valentinaJimenez0:Valentina123@clustervj.7lk17ev.mongodb.net/ecommerce?retryWrites=true&w=majority&appName=ClusterVJ")
  .then (()=> {console.log("conectado")})
  .catch (() => {console.error("errorr")})
 

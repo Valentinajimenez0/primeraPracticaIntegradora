@@ -24,23 +24,3 @@ export async function home(req, res) {
     }
 }
 
-export async function getProductById(req, res) {
-    const productId = (req.params.pid)
-
-    try {
-        const products = await readProductsFromFile()
-        const product = products.find(p => p.id === productId)
-        if (!product) {
-            const productList = products.map(({ id, title }) => ({ id, title }))
-            return res.status(404).render('error', {
-                message: 'Producto no encontrado. Aquí está una lista de productos disponibles:',
-                products: productList
-            })
-        } else {
-            res.render('productDetail', { product })
-        }
-    } catch (error) {
-        console.error('Error al buscar el producto especificado:', error)
-        res.status(500).render('error', { message: 'Error al buscar el producto especificado.' })
-    }
-}
